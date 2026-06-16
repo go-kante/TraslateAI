@@ -1,17 +1,134 @@
 ---
-
+// src/pages/index.astro
+// サーバー処理を無くして、ブラウザ側ですべて綺麗に処理させます
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI英単語メモ</title>
+    <link rel="stylesheet" href="https://jsdelivr.net">
+  </head>
+  <body>
+    <h1>🤖 AI英単語メモ</h1>
+    
+    <p id="errorText" style="display: none; color: red; background: #fee; padding: 10px; border-radius: 5px;"></p>
+
+    <!-- 入力エリア -->
+    <section>
+      <input type="text" id="inputText" placeholder="英単語 または 日本語を入力..." style="width: 100%; padding: 10px;" />
+      <button id="generateBtn" style="width: 100%; margin-top: 10px; background: #0076ff; color: white;">AIで翻訳＆例文を生成</button>
+    </section>
+
+    <!-- 結果表示エリア -->
+    <section id="resultSection" style="display: none; background: #f0f0f0; padding: 15px; border-radius: 8px; color: #333; margin-top: 20px;">
+      <h3 style="margin-top: 0;">✨ AI生成結果</h3>
+      <p><strong>【入力】:</strong> <span id="resOriginal"></span></p>
+      <p><strong>【翻訳】:</strong> <span id="resTranslation"></span></p>
+      <p><strong>【例文】:</strong> <span id="resExample"></span></p>
+      <p><strong>【和訳】:</strong> <span id="resMeaning"></span></p>
+      <button id="saveBtn" style="background: #28a745; color: white;">この単語を保存する</button>
+    </section>
+
+    <!-- 保存済み一覧 -->
+    <section style="margin-top: 30px;">
+      <h2>📋 保存済みの単語帳</h2>
+      <ul id="vocabList" style="list-style: none; padding: 0;"></ul>
+    </section>
+
+    <!-- フロントエンド処理 -->
+    <script>
+      const inputText = document.getElementById('inputText');
+      const generateBtn = document.getElementById('generateBtn');
+      const errorText = document.getElementById('errorText');
+      const resultSection = document.getElementById('resultSection');
+      const resOriginal = document.getElementById('resOriginal');
+      const resTranslation = document.getElementById('resTranslation');
+      const resExample = document.getElementById('resExample');
+      const resMeaning = document.getElementById('resMeaning');
+      const saveBtn = document.getElementById('saveBtn');
+      const vocabList = document.getElementById('vocabList');
+
+      let currentResult = null;
+      let savedWords = JSON.parse(localStorage.getItem('vocab_data')) || [];
+      renderList();
+
+      // AI生成ボタンを押した時の処理
+      generateBtn.addEventListener('click', async () => {
+        const text = inputText.value.trim();
+        if (!text) return;
+
+        // 初期化
+        generateBtn.disabled = true;
+        generateBtn.innerText = 'AIが考えています...';
+        errorText.style.display = 'none';
+        resultSection.style.display = 'none';
+
+        try {
+          // 先ほど作った裏方の api.js にリクエストを投げる
+          const response = await fetch('/api', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text })
+          });
+
+          const data = await response.json();
+
+          if (!response.ok) {
+            throw new Error(data.error || "通信エラーが発生しました。");
+          }
+
+          // 画面に表示
+          resOriginal.innerText = data.original;
+          resTranslation.innerText = data.translation;
+          resExample.innerText = data.example;
+          resMeaning.innerText = data.meaning;
+          resultSection.style.display = 'block';
+
+          currentResult = data;
+
+        } catch (err) {
+          errorText.innerText = `⚠️ エラー: ${err.message}`;
+          errorText.style.display = 'block';
+        } finally {
+          generateBtn.disabled = false;
+          generateBtn.innerText = 'AIで翻訳＆例文を生成';
+        }
+      });
+
+      // 保存ボタン
+      saveBtn.addEventListener('click', () => {
+        if (!currentResult) return;
+        const newWord = { ...currentResult, id: Date.now() };
+        savedWords.unshift(newWord);
+        localStorage.setItem('vocab_data', JSON.stringify(savedWords));
+        renderList();
+        
+        inputText.value = '';
+        resultSection.style.display = 'none';
+        currentResult = null;
+        alert('単語帳に保存しました！');
+      });
+
+      function renderList() {
+        vocabList.innerHTML = savedWords.map(word => `
+          <li style="border-bottom: 1px solid #ccc; padding: 10px 0;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <strong>${word.original} ➔ ${word.translation}</strong>
+              <button onclick="deleteWord(${word.id})" style="background: #dc3545; color: white; padding: 2px 8px; font-size: 12px; margin:0;">削除</button>
+            </div>
+            <div style="font-size: 0.9em; font-style: italic; color: #555; margin-top: 5px;">Ex: ${word.example}</div>
+            <div style="font-size: 0.85em; color: #777;">訳: ${word.meaning}</div>
+          </li>
+        `).join('');
+      }
+
+      window.deleteWord = function(id) {
+        savedWords = savedWords.filter(word => word.id !== id);
+        localStorage.setItem('vocab_data', JSON.stringify(savedWords));
+        renderList();
+      };
+    </script>
+  </body>
 </html>

@@ -12,6 +12,7 @@
     "astro": "astro"
   },
   "dependencies": {
+    "@google/genai": "^2.8.0",
     "astro": "^6.4.7"
   }
 }
