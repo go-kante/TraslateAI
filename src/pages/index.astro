@@ -1,6 +1,5 @@
 ---
 // src/pages/index.astro
-// サーバー処理を無くして、ブラウザ側ですべて綺麗に処理させます
 ---
 
 <html lang="ja">
@@ -23,12 +22,11 @@
 
     <!-- 結果表示エリア -->
     <section id="resultSection" style="display: none; background: #f0f0f0; padding: 15px; border-radius: 8px; color: #333; margin-top: 20px;">
-      <h3 style="margin-top: 0;">✨ AI生成結果</h3>
+      <h3 style="margin-top: 0;">✨ AI生成結果（自動保存されました）</h3>
       <p><strong>【入力】:</strong> <span id="resOriginal"></span></p>
       <p><strong>【翻訳】:</strong> <span id="resTranslation"></span></p>
       <p><strong>【例文】:</strong> <span id="resExample"></span></p>
-      <p><strong>【和訳】:</strong> <span id="resMeaning"></span></p>
-      <button id="saveBtn" style="background: #28a745; color: white;">この単語を保存する</button>
+      <p><strong>// 訳】:</strong> <span id="resMeaning"></span></p>
     </section>
 
     <!-- 保存済み一覧 -->
@@ -47,10 +45,8 @@
       const resTranslation = document.getElementById('resTranslation');
       const resExample = document.getElementById('resExample');
       const resMeaning = document.getElementById('resMeaning');
-      const saveBtn = document.getElementById('saveBtn');
       const vocabList = document.getElementById('vocabList');
 
-      let currentResult = null;
       let savedWords = JSON.parse(localStorage.getItem('vocab_data')) || [];
       renderList();
 
@@ -66,7 +62,7 @@
         resultSection.style.display = 'none';
 
         try {
-          // 先ほど作った裏方の api.js にリクエストを投げる
+          // api.js にリクエストを投げる
           const response = await fetch('/api', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -79,14 +75,21 @@
             throw new Error(data.error || "通信エラーが発生しました。");
           }
 
-          // 画面に表示
+          // 画面にAIの結果を表示
           resOriginal.innerText = data.original;
           resTranslation.innerText = data.translation;
           resExample.innerText = data.example;
           resMeaning.innerText = data.meaning;
           resultSection.style.display = 'block';
 
-          currentResult = data;
+          // 💡 【自動保存の処理】ボタンを押さずにそのままデータを単語帳に追加します
+          const newWord = { ...data, id: Date.now() };
+          savedWords.unshift(newWord); // リストの先頭に追加
+          localStorage.setItem('vocab_data', JSON.stringify(savedWords)); // ローカルストレージに保存
+          renderList(); // リスト表示を更新
+          
+          // 次の入力がしやすいように、入力欄だけを自動でクリアします
+          inputText.value = '';
 
         } catch (err) {
           errorText.innerText = `⚠️ エラー: ${err.message}`;
@@ -95,20 +98,6 @@
           generateBtn.disabled = false;
           generateBtn.innerText = 'AIで翻訳＆例文を生成';
         }
-      });
-
-      // 保存ボタン
-      saveBtn.addEventListener('click', () => {
-        if (!currentResult) return;
-        const newWord = { ...currentResult, id: Date.now() };
-        savedWords.unshift(newWord);
-        localStorage.setItem('vocab_data', JSON.stringify(savedWords));
-        renderList();
-        
-        inputText.value = '';
-        resultSection.style.display = 'none';
-        currentResult = null;
-        alert('単語帳に保存しました！');
       });
 
       function renderList() {
