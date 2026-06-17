@@ -86,11 +86,11 @@ import '../styles/global.css';
       const vocabList   = document.getElementById('vocabList');
       const countBadge  = document.getElementById('countBadge');
 
-      let savedWords: { id: number; original: string; translation: string; example: string; meaning: string }[] = [];
+      let savedWords = [];
       try { savedWords = JSON.parse(localStorage.getItem('vocab_data') ?? '[]') || []; } catch (_) {}
       renderList();
 
-      inputText.addEventListener('keydown', (e: KeyboardEvent) => {
+      inputText.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') generateBtn.click();
       });
 
@@ -123,7 +123,7 @@ import '../styles/global.css';
           renderList();
           inputText.value = '';
 
-        } catch (err: unknown) {
+        } catch (err) {
           errorMsg.textContent = err instanceof Error ? err.message : '不明なエラー';
           errorBar.classList.remove('hidden');
         } finally {
@@ -164,7 +164,7 @@ import '../styles/global.css';
         `).join('');
       }
 
-      window.deleteWord = function(id: number) {
+      window.deleteWord = function(id) {
         savedWords = savedWords.filter(w => w.id !== id);
         try { localStorage.setItem('vocab_data', JSON.stringify(savedWords)); } catch (_) {}
         renderList();
