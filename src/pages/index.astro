@@ -1,5 +1,10 @@
 ---
 import '../styles/global.css';
+
+const userId = Astro.locals.session.get('user_id');
+if (!userId) {
+  return Astro.redirect('/login');
+}
 ---
 
 <html lang="ja">
@@ -13,12 +18,17 @@ import '../styles/global.css';
     <div class="max-w-2xl mx-auto px-5 py-10">
 
       <!-- ヘッダー -->
-      <div class="mb-8">
-        <h1 class="text-2xl font-medium text-gray-950 flex items-center gap-2.5">
-          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-gray-400" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M19 4v16h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h12z"/><path d="M19 16h-12a2 2 0 0 0 -2 2"/><path d="M9 8h6"/></svg>
-          AI英単語メモ
-        </h1>
-        <p class="text-sm text-gray-500 mt-1">英単語または日本語を入力して、AIで翻訳と例文を生成</p>
+      <div class="mb-8 flex items-center justify-between">
+        <div>
+          <h1 class="text-2xl font-medium text-gray-950 flex items-center gap-2.5">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-gray-400" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M19 4v16h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h12z"/><path d="M19 16h-12a2 2 0 0 0 -2 2"/><path d="M9 8h6"/></svg>
+            AI英単語メモ
+          </h1>
+          <p class="text-xs text-gray-400 mt-1">{userId}</p>
+        </div>
+        <button id="logoutBtn" class="text-xs text-gray-400 hover:text-gray-600 border border-gray-200 rounded-lg px-3 py-1.5 transition-colors">
+          ログアウト
+        </button>
       </div>
 
       <!-- 入力エリア -->
@@ -34,7 +44,7 @@ import '../styles/global.css';
             id="generateBtn"
             class="h-10 px-5 bg-gray-950 hover:bg-gray-800 disabled:opacity-40 text-white text-sm font-medium rounded-lg transition-all duration-150 flex items-center gap-1.5 whitespace-nowrap"
           >
-            <svg id="btnIcon" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0"/><path d="M12 9l0 .01"/><path d="M11 12l1 0l0 3l1 0"/></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0"/><path d="M12 9l0 .01"/><path d="M11 12l1 0l0 3l1 0"/></svg>
             <span id="btnLabel">生成</span>
           </button>
         </div>
@@ -73,22 +83,39 @@ import '../styles/global.css';
     </div>
 
     <script>
-      const inputText  = document.getElementById('inputText');
-      const generateBtn = document.getElementById('generateBtn');
-      const btnLabel   = document.getElementById('btnLabel');
-      const errorBar   = document.getElementById('errorBar');
-      const errorMsg   = document.getElementById('errorMsg');
-      const resultSection = document.getElementById('resultSection');
-      const resOriginal   = document.getElementById('resOriginal');
+      const inputText      = document.getElementById('inputText');
+      const generateBtn    = document.getElementById('generateBtn');
+      const btnLabel       = document.getElementById('btnLabel');
+      const errorBar       = document.getElementById('errorBar');
+      const errorMsg       = document.getElementById('errorMsg');
+      const resultSection  = document.getElementById('resultSection');
+      const resOriginal    = document.getElementById('resOriginal');
       const resTranslation = document.getElementById('resTranslation');
-      const resExample  = document.getElementById('resExample');
-      const resMeaning  = document.getElementById('resMeaning');
-      const vocabList   = document.getElementById('vocabList');
-      const countBadge  = document.getElementById('countBadge');
+      const resExample     = document.getElementById('resExample');
+      const resMeaning     = document.getElementById('resMeaning');
+      const vocabList      = document.getElementById('vocabList');
+      const countBadge     = document.getElementById('countBadge');
+      const logoutBtn      = document.getElementById('logoutBtn');
 
       let savedWords = [];
-      try { savedWords = JSON.parse(localStorage.getItem('vocab_data') ?? '[]') || []; } catch (_) {}
-      renderList();
+
+      async function loadWords() {
+        try {
+          const res = await fetch('/words');
+          if (res.status === 401) { window.location.href = '/login'; return; }
+          const data = await res.json();
+          savedWords = data.words || [];
+          renderList();
+        } catch (e) {
+          console.error(e);
+        }
+      }
+      loadWords();
+
+      logoutBtn.addEventListener('click', async () => {
+        await fetch('/auth', { method: 'DELETE' });
+        window.location.href = '/login';
+      });
 
       inputText.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') generateBtn.click();
@@ -104,13 +131,13 @@ import '../styles/global.css';
         resultSection.classList.add('hidden');
 
         try {
-          const response = await fetch('/api', {
+          const res = await fetch('/api', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ text }),
           });
-          const data = await response.json();
-          if (!response.ok) throw new Error(data.error || '通信エラーが発生しました');
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || '通信エラーが発生しました');
 
           resOriginal.textContent    = data.original;
           resTranslation.textContent = data.translation;
@@ -118,9 +145,13 @@ import '../styles/global.css';
           resMeaning.textContent     = data.meaning;
           resultSection.classList.remove('hidden');
 
-          savedWords.unshift({ ...data, id: Date.now() });
-          try { localStorage.setItem('vocab_data', JSON.stringify(savedWords)); } catch (_) {}
-          renderList();
+          await fetch('/words', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+          });
+
+          await loadWords();
           inputText.value = '';
 
         } catch (err) {
@@ -164,10 +195,13 @@ import '../styles/global.css';
         `).join('');
       }
 
-      window.deleteWord = function(id) {
-        savedWords = savedWords.filter(w => w.id !== id);
-        try { localStorage.setItem('vocab_data', JSON.stringify(savedWords)); } catch (_) {}
-        renderList();
+      window.deleteWord = async function(id) {
+        await fetch('/words', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id }),
+        });
+        await loadWords();
       };
     </script>
   </body>

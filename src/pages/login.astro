@@ -1,0 +1,78 @@
+---
+import '../styles/global.css';
+---
+
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ログイン | AI英単語メモ</title>
+  </head>
+  <body class="bg-gray-50 text-gray-900 font-sans">
+    <div class="max-w-sm mx-auto px-5 py-20">
+
+      <div class="mb-8 text-center">
+        <h1 class="text-2xl font-medium text-gray-950">AI英単語メモ</h1>
+        <p class="text-sm text-gray-500 mt-1">メールアドレスでログイン</p>
+      </div>
+
+      <div class="bg-white border border-gray-100 rounded-xl p-6 shadow-sm">
+        <div id="errorBar" class="hidden mb-4 flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-2.5" role="alert">
+          <span id="errorMsg"></span>
+        </div>
+        <div class="space-y-3">
+          <input
+            type="email"
+            id="emailInput"
+            placeholder="メールアドレスを入力"
+            class="w-full h-10 px-3.5 text-base rounded-lg border border-gray-200 bg-gray-50 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-gray-400 focus:ring-2 focus:ring-gray-200 transition-all"
+          />
+          <button
+            id="loginBtn"
+            class="w-full h-10 bg-gray-950 hover:bg-gray-800 disabled:opacity-40 text-white text-sm font-medium rounded-lg transition-all duration-150"
+          >
+            ログイン / 新規登録
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+    <script>
+      const emailInput = document.getElementById('emailInput');
+      const loginBtn = document.getElementById('loginBtn');
+      const errorBar = document.getElementById('errorBar');
+      const errorMsg = document.getElementById('errorMsg');
+
+      emailInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') loginBtn.click();
+      });
+
+      loginBtn.addEventListener('click', async () => {
+        const email = emailInput.value.trim();
+        if (!email) return;
+
+        loginBtn.disabled = true;
+        loginBtn.textContent = '処理中...';
+        errorBar.classList.add('hidden');
+
+        try {
+          const res = await fetch('/auth', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email }),
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || 'ログインに失敗しました');
+          window.location.href = '/';
+        } catch (err) {
+          errorMsg.textContent = err.message;
+          errorBar.classList.remove('hidden');
+        } finally {
+          loginBtn.disabled = false;
+          loginBtn.textContent = 'ログイン / 新規登録';
+        }
+      });
+    </script>
+  </body>
+</html>

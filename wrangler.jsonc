@@ -12,5 +12,13 @@
 	},
 	"observability": {
 		"enabled": true
-	}
+	},
+	"d1_databases": [
+		{
+			"binding": "vocab_db",
+			"database_name": "vocab-db",
+			"database_id": "8f81ca4b-bbac-486c-9ef3-00d62b218a91",
+			"remote": true
+		}
+	]
 }
