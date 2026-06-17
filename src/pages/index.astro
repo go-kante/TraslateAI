@@ -7,115 +7,166 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>AI英単語メモ</title>
-    <link rel="stylesheet" href="https://jsdelivr.net">
   </head>
-  <body>
-    <h1>🤖 AI英単語メモ</h1>
-    
-    <p id="errorText" style="display: none; color: red; background: #fee; padding: 10px; border-radius: 5px;"></p>
+  <body class="bg-gray-50 text-gray-900 font-sans">
 
-    <!-- 入力エリア -->
-    <section>
-      <input type="text" id="inputText" placeholder="英単語 または 日本語を入力..." style="width: 100%; padding: 10px;" />
-      <button id="generateBtn" style="width: 100%; margin-top: 10px; background: #0076ff; color: white;">AIで翻訳＆例文を生成</button>
-    </section>
+    <div class="max-w-2xl mx-auto px-5 py-10">
 
-    <!-- 結果表示エリア -->
-    <section id="resultSection" style="display: none; background: #f0f0f0; padding: 15px; border-radius: 8px; color: #333; margin-top: 20px;">
-      <h3 style="margin-top: 0;">✨ AI生成結果（自動保存されました）</h3>
-      <p><strong>【入力】:</strong> <span id="resOriginal"></span></p>
-      <p><strong>【翻訳】:</strong> <span id="resTranslation"></span></p>
-      <p><strong>【例文】:</strong> <span id="resExample"></span></p>
-      <p><strong>// 訳】:</strong> <span id="resMeaning"></span></p>
-    </section>
+      <!-- ヘッダー -->
+      <div class="mb-8">
+        <h1 class="text-2xl font-medium text-gray-950 flex items-center gap-2.5">
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-gray-400" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M19 4v16h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h12z"/><path d="M19 16h-12a2 2 0 0 0 -2 2"/><path d="M9 8h6"/></svg>
+          AI英単語メモ
+        </h1>
+        <p class="text-sm text-gray-500 mt-1">英単語または日本語を入力して、AIで翻訳と例文を生成</p>
+      </div>
 
-    <!-- 保存済み一覧 -->
-    <section style="margin-top: 30px;">
-      <h2>📋 保存済みの単語帳</h2>
-      <ul id="vocabList" style="list-style: none; padding: 0;"></ul>
-    </section>
+      <!-- 入力エリア -->
+      <div class="bg-white border border-gray-100 rounded-xl p-4 mb-5 shadow-sm">
+        <div class="flex gap-2">
+          <input
+            type="text"
+            id="inputText"
+            placeholder="例: ephemeral / 儚い"
+            class="flex-1 h-10 px-3.5 text-base rounded-lg border border-gray-200 bg-gray-50 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-gray-400 focus:ring-2 focus:ring-gray-200 transition-all"
+          />
+          <button
+            id="generateBtn"
+            class="h-10 px-5 bg-gray-950 hover:bg-gray-800 disabled:opacity-40 text-white text-sm font-medium rounded-lg transition-all duration-150 flex items-center gap-1.5 whitespace-nowrap"
+          >
+            <svg id="btnIcon" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0"/><path d="M12 9l0 .01"/><path d="M11 12l1 0l0 3l1 0"/></svg>
+            <span id="btnLabel">生成</span>
+          </button>
+        </div>
+      </div>
 
-    <!-- フロントエンド処理 -->
+      <!-- エラーバー -->
+      <div id="errorBar" class="hidden mb-4 flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-2.5" role="alert">
+        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"/><path d="M12 8l0 4"/><path d="M12 16l.01 0"/></svg>
+        <span id="errorMsg"></span>
+      </div>
+
+      <!-- 生成結果 -->
+      <div id="resultSection" class="hidden bg-white border border-gray-100 rounded-xl p-5 mb-6 shadow-sm">
+        <p class="text-xs font-medium text-gray-400 uppercase tracking-widest mb-3">生成結果</p>
+        <div class="flex items-baseline gap-2.5 flex-wrap mb-4">
+          <span id="resOriginal" class="text-xl font-medium text-gray-950"></span>
+          <span class="text-gray-300 text-sm">→</span>
+          <span id="resTranslation" class="text-lg text-gray-500"></span>
+        </div>
+        <div class="border-t border-gray-100 pt-4 space-y-1">
+          <p id="resExample" class="text-sm text-gray-700 italic leading-relaxed"></p>
+          <p id="resMeaning" class="text-sm text-gray-400 leading-relaxed"></p>
+        </div>
+      </div>
+
+      <!-- 単語帳 -->
+      <div>
+        <div class="flex items-center gap-2 mb-3">
+          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-gray-400" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 19a9 9 0 0 1 9 0a9 9 0 0 1 9 0"/><path d="M3 6a9 9 0 0 1 9 0a9 9 0 0 1 9 0"/><path d="M3 6l0 13"/><path d="M12 6l0 13"/><path d="M21 6l0 13"/></svg>
+          <span class="text-sm font-medium text-gray-500">単語帳</span>
+          <span id="countBadge" class="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">0</span>
+        </div>
+        <ul id="vocabList" class="space-y-2 list-none p-0"></ul>
+      </div>
+
+    </div>
+
     <script>
-      const inputText = document.getElementById('inputText');
+      const inputText  = document.getElementById('inputText');
       const generateBtn = document.getElementById('generateBtn');
-      const errorText = document.getElementById('errorText');
+      const btnLabel   = document.getElementById('btnLabel');
+      const errorBar   = document.getElementById('errorBar');
+      const errorMsg   = document.getElementById('errorMsg');
       const resultSection = document.getElementById('resultSection');
-      const resOriginal = document.getElementById('resOriginal');
+      const resOriginal   = document.getElementById('resOriginal');
       const resTranslation = document.getElementById('resTranslation');
-      const resExample = document.getElementById('resExample');
-      const resMeaning = document.getElementById('resMeaning');
-      const vocabList = document.getElementById('vocabList');
+      const resExample  = document.getElementById('resExample');
+      const resMeaning  = document.getElementById('resMeaning');
+      const vocabList   = document.getElementById('vocabList');
+      const countBadge  = document.getElementById('countBadge');
 
-      let savedWords = JSON.parse(localStorage.getItem('vocab_data')) || [];
+      let savedWords: { id: number; original: string; translation: string; example: string; meaning: string }[] = [];
+      try { savedWords = JSON.parse(localStorage.getItem('vocab_data') ?? '[]') || []; } catch (_) {}
       renderList();
 
-      // AI生成ボタンを押した時の処理
+      inputText.addEventListener('keydown', (e: KeyboardEvent) => {
+        if (e.key === 'Enter') generateBtn.click();
+      });
+
       generateBtn.addEventListener('click', async () => {
         const text = inputText.value.trim();
         if (!text) return;
 
-        // 初期化
         generateBtn.disabled = true;
-        generateBtn.innerText = 'AIが考えています...';
-        errorText.style.display = 'none';
-        resultSection.style.display = 'none';
+        btnLabel.textContent = '生成中...';
+        errorBar.classList.add('hidden');
+        resultSection.classList.add('hidden');
 
         try {
-          // api.js にリクエストを投げる
           const response = await fetch('/api', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ text })
+            body: JSON.stringify({ text }),
           });
-
           const data = await response.json();
+          if (!response.ok) throw new Error(data.error || '通信エラーが発生しました');
 
-          if (!response.ok) {
-            throw new Error(data.error || "通信エラーが発生しました。");
-          }
+          resOriginal.textContent    = data.original;
+          resTranslation.textContent = data.translation;
+          resExample.textContent     = data.example;
+          resMeaning.textContent     = data.meaning;
+          resultSection.classList.remove('hidden');
 
-          // 画面にAIの結果を表示
-          resOriginal.innerText = data.original;
-          resTranslation.innerText = data.translation;
-          resExample.innerText = data.example;
-          resMeaning.innerText = data.meaning;
-          resultSection.style.display = 'block';
-
-          // 💡 【自動保存の処理】ボタンを押さずにそのままデータを単語帳に追加します
-          const newWord = { ...data, id: Date.now() };
-          savedWords.unshift(newWord); // リストの先頭に追加
-          localStorage.setItem('vocab_data', JSON.stringify(savedWords)); // ローカルストレージに保存
-          renderList(); // リスト表示を更新
-          
-          // 次の入力がしやすいように、入力欄だけを自動でクリアします
+          savedWords.unshift({ ...data, id: Date.now() });
+          try { localStorage.setItem('vocab_data', JSON.stringify(savedWords)); } catch (_) {}
+          renderList();
           inputText.value = '';
 
-        } catch (err) {
-          errorText.innerText = `⚠️ エラー: ${err.message}`;
-          errorText.style.display = 'block';
+        } catch (err: unknown) {
+          errorMsg.textContent = err instanceof Error ? err.message : '不明なエラー';
+          errorBar.classList.remove('hidden');
         } finally {
           generateBtn.disabled = false;
-          generateBtn.innerText = 'AIで翻訳＆例文を生成';
+          btnLabel.textContent = '生成';
         }
       });
 
       function renderList() {
-        vocabList.innerHTML = savedWords.map(word => `
-          <li style="border-bottom: 1px solid #ccc; padding: 10px 0;">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-              <strong>${word.original} ➔ ${word.translation}</strong>
-              <button onclick="deleteWord(${word.id})" style="background: #dc3545; color: white; padding: 2px 8px; font-size: 12px; margin:0;">削除</button>
+        countBadge.textContent = String(savedWords.length);
+
+        if (savedWords.length === 0) {
+          vocabList.innerHTML = `
+            <li class="text-center py-10 text-sm text-gray-400">
+              保存された単語はまだありません
+            </li>`;
+          return;
+        }
+
+        vocabList.innerHTML = savedWords.map(w => `
+          <li class="bg-white border border-gray-100 rounded-xl px-4 py-3.5 shadow-sm flex gap-3 items-start">
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 flex-wrap mb-1.5">
+                <span class="text-base font-medium text-gray-950">${w.original}</span>
+                <span class="text-gray-300 text-xs">→</span>
+                <span class="text-sm text-gray-500">${w.translation}</span>
+              </div>
+              <p class="text-xs text-gray-400 italic truncate">${w.example}</p>
             </div>
-            <div style="font-size: 0.9em; font-style: italic; color: #555; margin-top: 5px;">Ex: ${word.example}</div>
-            <div style="font-size: 0.85em; color: #777;">訳: ${word.meaning}</div>
+            <button
+              onclick="deleteWord(${w.id})"
+              class="flex-shrink-0 w-7 h-7 flex items-center justify-center rounded-lg border border-gray-100 text-gray-300 hover:bg-red-50 hover:border-red-200 hover:text-red-500 transition-colors"
+              aria-label="削除"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M18 6l-12 12"/><path d="M6 6l12 12"/></svg>
+            </button>
           </li>
         `).join('');
       }
 
-      window.deleteWord = function(id) {
-        savedWords = savedWords.filter(word => word.id !== id);
-        localStorage.setItem('vocab_data', JSON.stringify(savedWords));
+      window.deleteWord = function(id: number) {
+        savedWords = savedWords.filter(w => w.id !== id);
+        try { localStorage.setItem('vocab_data', JSON.stringify(savedWords)); } catch (_) {}
         renderList();
       };
     </script>
