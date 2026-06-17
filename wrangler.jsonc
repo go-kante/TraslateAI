@@ -2,23 +2,28 @@
 	"$schema": "./node_modules/wrangler/config-schema.json",
 	"compatibility_date": "2026-06-17",
 	"compatibility_flags": [
-		"global_fetch_strictly_public"
+			"global_fetch_strictly_public"
 	],
 	"name": "ai-vocab-app",
 	"main": "@astrojs/cloudflare/entrypoints/server",
 	"assets": {
-		"directory": "./dist",
-		"binding": "ASSETS"
+			"directory": "./dist",
+			"binding": "ASSETS"
 	},
 	"observability": {
-		"enabled": true
+			"enabled": true
 	},
 	"d1_databases": [
-		{
-			"binding": "vocab_db",
-			"database_name": "vocab-db",
-			"database_id": "8f81ca4b-bbac-486c-9ef3-00d62b218a91",
-			"remote": true
-		}
+			{
+					"binding": "DB",
+					"database_name": "vocab-db",
+					"database_id": "8f81ca4b-bbac-486c-9ef3-00d62b218a91"
+			}
+	],
+	"kv_namespaces": [
+			{
+					"binding": "SESSION",
+					"id": "09139554994b44109ddbb64152b2085e"
+			}
 	]
 }

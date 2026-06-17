@@ -1,9 +1,14 @@
 // src/pages/words.js
 
-// 単語一覧取得
-export const GET = async ({ locals }) => {
+function getUserId(request) {
+    const cookie = request.headers.get('cookie') || '';
+    const match = cookie.match(/user_id=([^;]+)/);
+    return match ? decodeURIComponent(match[1]) : null;
+  }
+  
+  export const GET = async ({ request, locals }) => {
     try {
-      const userId = locals.session.get('user_id');
+      const userId = getUserId(request);
       if (!userId) {
         return new Response(JSON.stringify({ error: '未ログイン' }), { status: 401 });
       }
@@ -21,10 +26,9 @@ export const GET = async ({ locals }) => {
     }
   };
   
-  // 単語保存
   export const POST = async ({ request, locals }) => {
     try {
-      const userId = locals.session.get('user_id');
+      const userId = getUserId(request);
       if (!userId) {
         return new Response(JSON.stringify({ error: '未ログイン' }), { status: 401 });
       }
@@ -41,10 +45,9 @@ export const GET = async ({ locals }) => {
     }
   };
   
-  // 単語削除
   export const DELETE = async ({ request, locals }) => {
     try {
-      const userId = locals.session.get('user_id');
+      const userId = getUserId(request);
       if (!userId) {
         return new Response(JSON.stringify({ error: '未ログイン' }), { status: 401 });
       }

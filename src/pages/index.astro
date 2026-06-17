@@ -1,7 +1,10 @@
 ---
 import '../styles/global.css';
 
-const userId = Astro.locals.session.get('user_id');
+const cookie = Astro.request.headers.get('cookie') || '';
+const match = cookie.match(/user_id=([^;]+)/);
+const userId = match ? decodeURIComponent(match[1]) : null;
+
 if (!userId) {
   return Astro.redirect('/login');
 }
