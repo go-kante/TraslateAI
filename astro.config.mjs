@@ -1,11 +1,6 @@
 import { defineConfig } from 'astro/config';
-
 import cloudflare from '@astrojs/cloudflare';
-
 import tailwindcss from '@tailwindcss/vite';
-
-import { defineConfig } from 'astro/config';
-import cloudflare from '@astrojs/cloudflare';
 
 export default defineConfig({
   output: 'server',
@@ -16,5 +11,3 @@ export default defineConfig({
     plugins: [tailwindcss()]
   }
 });
-
-
