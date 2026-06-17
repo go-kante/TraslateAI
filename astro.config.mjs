@@ -3,7 +3,7 @@ import cloudflare from '@astrojs/cloudflare';
 import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
-  output: 'server',
+  output: 'static',  // ← これを追加または変更
   adapter: cloudflare({
     mode: 'advanced'
   }),
