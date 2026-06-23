@@ -79,6 +79,26 @@ if (!userId) {
           <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-gray-400" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 19a9 9 0 0 1 9 0a9 9 0 0 1 9 0"/><path d="M3 6a9 9 0 0 1 9 0a9 9 0 0 1 9 0"/><path d="M3 6l0 13"/><path d="M12 6l0 13"/><path d="M21 6l0 13"/></svg>
           <span class="text-sm font-medium text-gray-500">単語帳</span>
           <span id="countBadge" class="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">0</span>
+          <div class="ml-auto flex gap-1.5">
+            <button
+              id="toggleOriginal"
+              class="flex items-center gap-1 text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 text-gray-500 transition-colors"
+              aria-pressed="false"
+            >
+              <svg class="eye-on" xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0"/><path d="M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6"/></svg>
+              <svg class="eye-off hidden" xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10.585 10.587a2 2 0 0 0 2.829 2.828"/><path d="M16.681 16.673a8.717 8.717 0 0 1 -4.681 1.327c-3.6 0 -6.6 -2 -9 -6c1.272 -2.12 2.712 -3.678 4.32 -4.674m2.86 -1.146a9.055 9.055 0 0 1 1.82 -.18c3.6 0 6.6 2 9 6c-.666 1.11 -1.379 2.067 -2.138 2.87"/><path d="M3 3l18 18"/></svg>
+              英語
+            </button>
+            <button
+              id="toggleTranslation"
+              class="flex items-center gap-1 text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 text-gray-500 transition-colors"
+              aria-pressed="false"
+            >
+              <svg class="eye-on" xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0"/><path d="M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6"/></svg>
+              <svg class="eye-off hidden" xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10.585 10.587a2 2 0 0 0 2.829 2.828"/><path d="M16.681 16.673a8.717 8.717 0 0 1 -4.681 1.327c-3.6 0 -6.6 -2 -9 -6c1.272 -2.12 2.712 -3.678 4.32 -4.674m2.86 -1.146a9.055 9.055 0 0 1 1.82 -.18c3.6 0 6.6 2 9 6c-.666 1.11 -1.379 2.067 -2.138 2.87"/><path d="M3 3l18 18"/></svg>
+              日本語
+            </button>
+          </div>
         </div>
         <ul id="vocabList" class="space-y-2 list-none p-0"></ul>
       </div>
@@ -99,8 +119,45 @@ if (!userId) {
       const vocabList      = document.getElementById('vocabList');
       const countBadge     = document.getElementById('countBadge');
       const logoutBtn      = document.getElementById('logoutBtn');
+      const toggleOriginal    = document.getElementById('toggleOriginal');
+      const toggleTranslation = document.getElementById('toggleTranslation');
 
       let savedWords = [];
+      let hideOriginal    = false; // 英語を隠す
+      let hideTranslation = false; // 日本語を隠す
+
+      function escapeHtml(s) {
+        return String(s ?? '').replace(/[&<>"']/g, c => (
+          { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+        ));
+      }
+
+      function maskedSpan(text, hidden, extraClass) {
+        const safe = escapeHtml(text);
+        if (!hidden) return `<span class="${extraClass}">${safe}</span>`;
+        return `<span class="${extraClass} mask-hidden cursor-pointer select-none rounded bg-gray-100 text-transparent hover:bg-gray-200 transition-colors" data-reveal>${safe}</span>`;
+      }
+
+      function setToggle(btn, on) {
+        btn.setAttribute('aria-pressed', String(on));
+        btn.querySelector('.eye-on').classList.toggle('hidden', on);
+        btn.querySelector('.eye-off').classList.toggle('hidden', !on);
+        btn.classList.toggle('bg-gray-950', on);
+        btn.classList.toggle('text-white', on);
+        btn.classList.toggle('border-gray-950', on);
+        btn.classList.toggle('text-gray-500', !on);
+      }
+
+      toggleOriginal.addEventListener('click', () => {
+        hideOriginal = !hideOriginal;
+        setToggle(toggleOriginal, hideOriginal);
+        renderList();
+      });
+      toggleTranslation.addEventListener('click', () => {
+        hideTranslation = !hideTranslation;
+        setToggle(toggleTranslation, hideTranslation);
+        renderList();
+      });
 
       async function loadWords() {
         try {
@@ -181,11 +238,11 @@ if (!userId) {
           <li class="bg-white border border-gray-100 rounded-xl px-4 py-3.5 shadow-sm flex gap-3 items-start">
             <div class="flex-1 min-w-0">
               <div class="flex items-center gap-2 flex-wrap mb-1.5">
-                <span class="text-base font-medium text-gray-950">${w.original}</span>
+                ${maskedSpan(w.original, hideOriginal, 'text-base font-medium text-gray-950')}
                 <span class="text-gray-300 text-xs">→</span>
-                <span class="text-sm text-gray-500">${w.translation}</span>
+                ${maskedSpan(w.translation, hideTranslation, 'text-sm text-gray-500')}
               </div>
-              <p class="text-xs text-gray-400 italic truncate">${w.example}</p>
+              <p class="text-xs text-gray-400 italic truncate">${escapeHtml(w.example)}</p>
             </div>
             <button
               onclick="deleteWord(${w.id})"
@@ -197,6 +254,14 @@ if (!userId) {
           </li>
         `).join('');
       }
+
+      // 隠れた語をタップで個別に表示
+      vocabList.addEventListener('click', (e) => {
+        const el = e.target.closest('[data-reveal]');
+        if (!el) return;
+        el.classList.remove('mask-hidden', 'bg-gray-100', 'text-transparent', 'hover:bg-gray-200', 'cursor-pointer');
+        el.removeAttribute('data-reveal');
+      });
 
       window.deleteWord = async function(id) {
         await fetch('/words', {
