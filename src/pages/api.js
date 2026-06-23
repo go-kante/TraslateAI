@@ -15,7 +15,7 @@ export const POST = async ({ request }) => {
         : `ユーザーが「${text}」という日本語を入力しました。以下の3点を【必ず指定のJSONフォーマットのみ】で返却してください。余計な解説文は一切含めないでください。\n{\n  "translation": "対応する英単語や英語フレーズ（簡潔に）",\n  "example": "その英単語やフレーズを使った日常会話で使える自然な短い英語の例文",\n  "meaning": "その例文の日本語訳"\n}`;
   
       // 💡 AQ.から始まる認証キーに対応するため、リクエストヘッダーに 'X-Goog-Api-Key' を明示的に指定します
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent`;
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent`;
       const response = await fetch(url, {
         method: 'POST',
         headers: { 

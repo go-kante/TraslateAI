@@ -1,0 +1,241 @@
+---
+import '../styles/global.css';
+
+const cookie = Astro.request.headers.get('cookie') || '';
+const match = cookie.match(/user_id=([^;]+)/);
+const userId = match ? decodeURIComponent(match[1]) : null;
+
+if (!userId) {
+  return Astro.redirect('/login');
+}
+---
+
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>クイズ | AI英単語メモ</title>
+  </head>
+  <body class="bg-gray-50 text-gray-900 font-sans">
+
+    <div class="max-w-2xl mx-auto px-5 py-10 min-h-screen flex flex-col">
+
+      <!-- ヘッダー -->
+      <div class="mb-6 flex items-center justify-between">
+        <a href="/" class="flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-600 transition-colors">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 12l14 0"/><path d="M5 12l6 6"/><path d="M5 12l6 -6"/></svg>
+          戻る
+        </a>
+        <span id="progressText" class="text-xs text-gray-400"></span>
+      </div>
+
+      <!-- 進捗バー -->
+      <div class="h-1 w-full bg-gray-100 rounded-full overflow-hidden mb-8">
+        <div id="progressBar" class="h-full bg-gray-950 transition-all duration-300" style="width:0%"></div>
+      </div>
+
+      <!-- 読み込み中 / 空状態 -->
+      <div id="emptyState" class="hidden flex-1 flex flex-col items-center justify-center text-center gap-4">
+        <p class="text-sm text-gray-400">学習中の単語がありません。<br />単語を追加してからクイズを始めましょう。</p>
+        <a href="/" class="h-10 px-5 inline-flex items-center bg-gray-950 hover:bg-gray-800 text-white text-sm font-medium rounded-lg transition-colors">トップに戻る</a>
+      </div>
+
+      <!-- 出題 -->
+      <div id="quizCard" class="hidden flex-1 flex flex-col">
+        <div class="flex-1 flex flex-col items-center justify-center text-center">
+          <p class="text-xs font-medium text-gray-400 uppercase tracking-widest mb-4">英単語</p>
+          <p id="qOriginal" class="text-3xl font-medium text-gray-950 break-words"></p>
+
+          <!-- 答え -->
+          <div id="answerArea" class="hidden mt-8 w-full">
+            <div class="border-t border-gray-100 pt-6 space-y-3">
+              <p id="qTranslation" class="text-xl text-gray-700"></p>
+              <p id="qExample" class="text-sm text-gray-500 italic leading-relaxed"></p>
+              <p id="qMeaning" class="text-sm text-gray-400 leading-relaxed"></p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 操作ボタン -->
+        <div class="mt-8">
+          <button
+            id="showAnswerBtn"
+            class="w-full h-12 bg-gray-950 hover:bg-gray-800 text-white text-sm font-medium rounded-xl transition-colors"
+          >
+            答えを見る
+          </button>
+
+          <div id="judgeBtns" class="hidden grid grid-cols-2 gap-3">
+            <button
+              id="unknownBtn"
+              class="h-12 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 text-sm font-medium rounded-xl transition-colors flex items-center justify-center gap-1.5"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M18 6l-12 12"/><path d="M6 6l12 12"/></svg>
+              わからない
+            </button>
+            <button
+              id="knownBtn"
+              class="h-12 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-medium rounded-xl transition-colors flex items-center justify-center gap-1.5"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 12l5 5l10 -10"/></svg>
+              わかる
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 結果 -->
+      <div id="resultState" class="hidden flex-1 flex flex-col items-center justify-center text-center gap-6">
+        <div class="w-16 h-16 rounded-full bg-emerald-50 flex items-center justify-center">
+          <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-emerald-500" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 12l5 5l10 -10"/></svg>
+        </div>
+        <div>
+          <p class="text-lg font-medium text-gray-950 mb-1">クイズ終了!</p>
+          <p id="resultSummary" class="text-sm text-gray-500"></p>
+        </div>
+        <div class="flex gap-3">
+          <button id="retryBtn" class="h-10 px-5 bg-gray-950 hover:bg-gray-800 text-white text-sm font-medium rounded-lg transition-colors">もう一度</button>
+          <a href="/" class="h-10 px-5 inline-flex items-center bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 text-sm font-medium rounded-lg transition-colors">トップに戻る</a>
+        </div>
+      </div>
+
+    </div>
+
+    <script>
+      const progressText  = document.getElementById('progressText');
+      const progressBar   = document.getElementById('progressBar');
+      const emptyState    = document.getElementById('emptyState');
+      const quizCard      = document.getElementById('quizCard');
+      const resultState   = document.getElementById('resultState');
+      const qOriginal     = document.getElementById('qOriginal');
+      const qTranslation  = document.getElementById('qTranslation');
+      const qExample      = document.getElementById('qExample');
+      const qMeaning      = document.getElementById('qMeaning');
+      const answerArea    = document.getElementById('answerArea');
+      const showAnswerBtn = document.getElementById('showAnswerBtn');
+      const judgeBtns     = document.getElementById('judgeBtns');
+      const knownBtn      = document.getElementById('knownBtn');
+      const unknownBtn    = document.getElementById('unknownBtn');
+      const retryBtn      = document.getElementById('retryBtn');
+      const resultSummary = document.getElementById('resultSummary');
+
+      const QUIZ_SIZE = 10;
+
+      let queue = [];        // 出題キュー（わからないは末尾に再追加）
+      let index = 0;         // 現在の出題位置
+      let initialCount = 0;  // 最初の問題数（進捗バー基準）
+      let masteredIds = new Set(); // わかった単語のid（重複カウント防止）
+
+      function shuffle(arr) {
+        const a = arr.slice();
+        for (let i = a.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [a[i], a[j]] = [a[j], a[i]];
+        }
+        return a;
+      }
+
+      async function init() {
+        let words = [];
+        try {
+          const res = await fetch('/words');
+          if (res.status === 401) { window.location.href = '/login'; return; }
+          const data = await res.json();
+          words = (data.words || []).filter(w => w.status !== 'mastered');
+        } catch (e) {
+          console.error(e);
+        }
+
+        if (words.length === 0) {
+          emptyState.classList.remove('hidden');
+          emptyState.classList.add('flex');
+          return;
+        }
+
+        // ランダムに最大10問（あるだけ出題）
+        queue = shuffle(words).slice(0, QUIZ_SIZE);
+        index = 0;
+        initialCount = queue.length;
+        masteredIds = new Set();
+
+        quizCard.classList.remove('hidden');
+        quizCard.classList.add('flex');
+        showQuestion();
+      }
+
+      function showQuestion() {
+        const w = queue[index];
+        qOriginal.textContent    = w.original;
+        qTranslation.textContent = w.translation;
+        qExample.textContent     = w.example || '';
+        qMeaning.textContent     = w.meaning || '';
+
+        // 答えを隠した状態に戻す
+        answerArea.classList.add('hidden');
+        judgeBtns.classList.add('hidden');
+        judgeBtns.classList.remove('grid');
+        showAnswerBtn.classList.remove('hidden');
+
+        // 進捗（解いた問題数 / 最初の問題数。再出題で増えても100%で頭打ち）
+        const answered = Math.min(index, initialCount);
+        progressText.textContent = `${Math.min(index + 1, initialCount)} / ${initialCount}`;
+        progressBar.style.width = `${(answered / initialCount) * 100}%`;
+      }
+
+      function revealAnswer() {
+        answerArea.classList.remove('hidden');
+        showAnswerBtn.classList.add('hidden');
+        judgeBtns.classList.remove('hidden');
+        judgeBtns.classList.add('grid');
+      }
+
+      async function answer(known) {
+        const w = queue[index];
+        if (known) {
+          masteredIds.add(w.id);
+          // 理解済みへ
+          fetch('/words', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: w.id, status: 'mastered' }),
+          }).catch(e => console.error(e));
+        } else {
+          // わからない → 同セッションの末尾に再出題（学習単語のまま）
+          masteredIds.delete(w.id);
+          queue.push({ ...w });
+        }
+
+        index++;
+        if (index >= queue.length) {
+          finish();
+        } else {
+          showQuestion();
+        }
+      }
+
+      function finish() {
+        quizCard.classList.add('hidden');
+        quizCard.classList.remove('flex');
+        resultState.classList.remove('hidden');
+        resultState.classList.add('flex');
+
+        const knownCount = masteredIds.size;
+        const reviewCount = initialCount - knownCount;
+        resultSummary.textContent = `わかった ${knownCount}語 ・ 復習 ${reviewCount}語`;
+        progressBar.style.width = '100%';
+        progressText.textContent = `${initialCount} / ${initialCount}`;
+      }
+
+      showAnswerBtn.addEventListener('click', revealAnswer);
+      knownBtn.addEventListener('click', () => answer(true));
+      unknownBtn.addEventListener('click', () => answer(false));
+      retryBtn.addEventListener('click', () => {
+        resultState.classList.add('hidden');
+        resultState.classList.remove('flex');
+        init();
+      });
+
+      init();
+    </script>
+  </body>
+</html>

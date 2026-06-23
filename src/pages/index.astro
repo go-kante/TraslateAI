@@ -34,6 +34,16 @@ if (!userId) {
         </button>
       </div>
 
+      <!-- クイズ開始 -->
+      <a
+        id="quizBtn"
+        href="/quiz"
+        class="mb-5 w-full flex items-center justify-center gap-2 h-12 bg-gray-950 hover:bg-gray-800 text-white text-sm font-medium rounded-xl transition-all duration-150 shadow-sm"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 7a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v10a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-10z"/><path d="M8 8m0 1a1 1 0 0 1 1 -1h6a1 1 0 0 1 1 1v0a1 1 0 0 1 -1 1h-6a1 1 0 0 1 -1 -1z"/><path d="M9 14l.01 0"/><path d="M13 14l2 0"/></svg>
+        <span id="quizBtnLabel">クイズを始める</span>
+      </a>
+
       <!-- 入力エリア -->
       <div class="bg-white border border-gray-100 rounded-xl p-4 mb-5 shadow-sm">
         <div class="flex gap-2">
@@ -73,12 +83,9 @@ if (!userId) {
         </div>
       </div>
 
-      <!-- 単語帳 -->
-      <div>
-        <div class="flex items-center gap-2 mb-3">
-          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-gray-400" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 19a9 9 0 0 1 9 0a9 9 0 0 1 9 0"/><path d="M3 6a9 9 0 0 1 9 0a9 9 0 0 1 9 0"/><path d="M3 6l0 13"/><path d="M12 6l0 13"/><path d="M21 6l0 13"/></svg>
-          <span class="text-sm font-medium text-gray-500">単語帳</span>
-          <span id="countBadge" class="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">0</span>
+      <!-- 表示トグル -->
+      <div class="flex items-center mb-4">
+          <span class="text-xs text-gray-400">表示</span>
           <div class="ml-auto flex gap-1.5">
             <button
               id="toggleOriginal"
@@ -99,8 +106,34 @@ if (!userId) {
               日本語
             </button>
           </div>
+      </div>
+
+      <!-- 学習単語欄 -->
+      <div class="mb-8">
+        <div class="flex items-center gap-2 mb-3">
+          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-gray-400" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 19a9 9 0 0 1 9 0a9 9 0 0 1 9 0"/><path d="M3 6a9 9 0 0 1 9 0a9 9 0 0 1 9 0"/><path d="M3 6l0 13"/><path d="M12 6l0 13"/><path d="M21 6l0 13"/></svg>
+          <span class="text-sm font-medium text-gray-500">学習単語</span>
+          <span id="learningBadge" class="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">0</span>
+          <a id="learningMore" href="/list?type=learning" class="ml-auto hidden items-center gap-0.5 text-xs text-gray-400 hover:text-gray-600 transition-colors">
+            さらに表示
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M9 6l6 6l-6 6"/></svg>
+          </a>
         </div>
-        <ul id="vocabList" class="space-y-2 list-none p-0"></ul>
+        <ul id="learningList" class="space-y-2 list-none p-0"></ul>
+      </div>
+
+      <!-- 理解済み単語欄 -->
+      <div>
+        <div class="flex items-center gap-2 mb-3">
+          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-emerald-500" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 12l5 5l10 -10"/></svg>
+          <span class="text-sm font-medium text-gray-500">理解済み単語</span>
+          <span id="masteredBadge" class="text-xs text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">0</span>
+          <a id="masteredMore" href="/list?type=mastered" class="ml-auto hidden items-center gap-0.5 text-xs text-gray-400 hover:text-gray-600 transition-colors">
+            さらに表示
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M9 6l6 6l-6 6"/></svg>
+          </a>
+        </div>
+        <ul id="masteredList" class="space-y-2 list-none p-0"></ul>
       </div>
 
     </div>
@@ -116,8 +149,15 @@ if (!userId) {
       const resTranslation = document.getElementById('resTranslation');
       const resExample     = document.getElementById('resExample');
       const resMeaning     = document.getElementById('resMeaning');
-      const vocabList      = document.getElementById('vocabList');
-      const countBadge     = document.getElementById('countBadge');
+      const learningList   = document.getElementById('learningList');
+      const masteredList   = document.getElementById('masteredList');
+      const learningBadge  = document.getElementById('learningBadge');
+      const masteredBadge  = document.getElementById('masteredBadge');
+      const learningMore   = document.getElementById('learningMore');
+      const masteredMore   = document.getElementById('masteredMore');
+      const PREVIEW_LIMIT  = 3; // トップに表示する最大件数
+      const quizBtn        = document.getElementById('quizBtn');
+      const quizBtnLabel   = document.getElementById('quizBtnLabel');
       const logoutBtn      = document.getElementById('logoutBtn');
       const toggleOriginal    = document.getElementById('toggleOriginal');
       const toggleTranslation = document.getElementById('toggleTranslation');
@@ -223,18 +263,18 @@ if (!userId) {
         }
       });
 
-      function renderList() {
-        countBadge.textContent = String(savedWords.length);
-
-        if (savedWords.length === 0) {
-          vocabList.innerHTML = `
-            <li class="text-center py-10 text-sm text-gray-400">
-              保存された単語はまだありません
-            </li>`;
-          return;
-        }
-
-        vocabList.innerHTML = savedWords.map(w => `
+      function wordItem(w, mastered) {
+        // mastered のときは「学習に戻す」、learning のときは無し。両方に削除ボタン。
+        const restoreBtn = mastered ? `
+            <button
+              onclick="setStatus(${w.id}, 'learning')"
+              class="flex-shrink-0 h-7 px-2 flex items-center gap-1 rounded-lg border border-gray-100 text-xs text-gray-400 hover:bg-gray-50 hover:text-gray-600 transition-colors"
+              aria-label="学習に戻す"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M9 14l-4 -4l4 -4"/><path d="M5 10h11a4 4 0 1 1 0 8h-1"/></svg>
+              学習に戻す
+            </button>` : '';
+        return `
           <li class="bg-white border border-gray-100 rounded-xl px-4 py-3.5 shadow-sm flex gap-3 items-start">
             <div class="flex-1 min-w-0">
               <div class="flex items-center gap-2 flex-wrap mb-1.5">
@@ -244,6 +284,7 @@ if (!userId) {
               </div>
               <p class="text-xs text-gray-400 italic truncate">${escapeHtml(w.example)}</p>
             </div>
+            ${restoreBtn}
             <button
               onclick="deleteWord(${w.id})"
               class="flex-shrink-0 w-7 h-7 flex items-center justify-center rounded-lg border border-gray-100 text-gray-300 hover:bg-red-50 hover:border-red-200 hover:text-red-500 transition-colors"
@@ -251,17 +292,58 @@ if (!userId) {
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M18 6l-12 12"/><path d="M6 6l12 12"/></svg>
             </button>
-          </li>
-        `).join('');
+          </li>`;
+      }
+
+      function renderList() {
+        const learning = savedWords.filter(w => w.status !== 'mastered');
+        const mastered = savedWords.filter(w => w.status === 'mastered');
+
+        learningBadge.textContent = String(learning.length);
+        masteredBadge.textContent = String(mastered.length);
+
+        // トップでは各3件まで表示
+        learningList.innerHTML = learning.length
+          ? learning.slice(0, PREVIEW_LIMIT).map(w => wordItem(w, false)).join('')
+          : `<li class="text-center py-8 text-sm text-gray-400">学習中の単語はまだありません</li>`;
+
+        masteredList.innerHTML = mastered.length
+          ? mastered.slice(0, PREVIEW_LIMIT).map(w => wordItem(w, true)).join('')
+          : `<li class="text-center py-8 text-sm text-gray-400">理解済みの単語はまだありません</li>`;
+
+        // 3件を超えるときだけ「さらに表示」を出す（flex で表示）
+        learningMore.classList.toggle('flex', learning.length > PREVIEW_LIMIT);
+        learningMore.classList.toggle('hidden', learning.length <= PREVIEW_LIMIT);
+        masteredMore.classList.toggle('flex', mastered.length > PREVIEW_LIMIT);
+        masteredMore.classList.toggle('hidden', mastered.length <= PREVIEW_LIMIT);
+
+        // 学習単語が0ならクイズ開始を無効化
+        const canQuiz = learning.length > 0;
+        quizBtn.classList.toggle('pointer-events-none', !canQuiz);
+        quizBtn.classList.toggle('opacity-40', !canQuiz);
+        quizBtnLabel.textContent = canQuiz ? 'クイズを始める' : '学習単語がありません';
       }
 
       // 隠れた語をタップで個別に表示
-      vocabList.addEventListener('click', (e) => {
-        const el = e.target.closest('[data-reveal]');
-        if (!el) return;
-        el.classList.remove('mask-hidden', 'bg-gray-100', 'text-transparent', 'hover:bg-gray-200', 'cursor-pointer');
-        el.removeAttribute('data-reveal');
-      });
+      function attachReveal(listEl) {
+        listEl.addEventListener('click', (e) => {
+          const el = e.target.closest('[data-reveal]');
+          if (!el) return;
+          el.classList.remove('mask-hidden', 'bg-gray-100', 'text-transparent', 'hover:bg-gray-200', 'cursor-pointer');
+          el.removeAttribute('data-reveal');
+        });
+      }
+      attachReveal(learningList);
+      attachReveal(masteredList);
+
+      window.setStatus = async function(id, status) {
+        await fetch('/words', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id, status }),
+        });
+        await loadWords();
+      };
 
       window.deleteWord = async function(id) {
         await fetch('/words', {
